@@ -1,0 +1,229 @@
+软件工程Project1
+数媒1501班 王思哲 U201517175
+1、	任务简介
+In a box bounded by [-1, 1], given m balloons (they cannot overlap) with variable radio r and position mu, find the optimal value of r and mu which maximize sum r^2
+2、	设置Github仓库
+$ mkdir SoftwareEngineer
+$ cd SoftwareEngineer
+$ git init
+$ git commit -m "the first file to commit"
+[master (root-commit) 0c72641] the first file to commit
+1 files changed, 1 insertions(+), 0 deletions(-)
+$ git remote add origin git@github.com:lizekang/SoftwareEngineer.git
+$ git push -u origin master
+3、	算法
+采用贪婪算法，一直取面积最大的圆。
+1、	首先初始化一个队列来存放产生圆圈的区域；
+2、	接着选择最大的圆(坐标x 0.5, 坐标y 0.5,半径r 0.5)；
+3、	再者将产生的4块区域加入到队列中；
+4、	其次将栈顶第一个区域出栈，计算此区域最大的圆；
+5、	找到合适的位置插入上一步的圆；
+6、	接着循环步骤4、5，直到圆的数目达到M；
+7、	将圆绘制出来。
+4、	测试用例
+M=4
+M=12
+M=36
+M=100
+5、	代码部分
+6、	#! /usr/bin/python2
+7、	# -*- coding:utf-8 -*-
+8、	
+9、	
+10、	import math
+11、	import turtle
+12、	
+13、	
+14、	class Point(object):
+15、	    def __init__(self, x, y):
+16、	        self.x = x
+17、	        self.y = y
+18、	
+19、	
+20、	class Edge(object):
+21、	    def __init__(self, point1, point2):
+22、	        self.A = point2.y - point1.y
+23、	        self.B = point1.x - point2.x
+24、	        self.C = point2.x*point1.y - point1.x*point2.y
+25、	
+26、	
+27、	class Circle1(object):
+28、	    def __init__(self, point, r):
+29、	        self.point = point
+30、	        self.r = r
+31、	
+32、	
+33、	def p(num):
+34、	    return pow(num, 2)
+35、	
+36、	
+37、	def point_with_2edges(edge1, edge2):
+38、	    A1 = edge1.A
+39、	    A2 = edge2.A
+40、	    B1 = edge1.B
+41、	    B2 = edge2.B
+42、	    C1 = edge1.C
+43、	    C2 = edge2.C
+44、	    x = ((C1 * B2 - B1 * C2)/(A2 * B1 - A1 * B2) if C1 * B2 - B1 * C2 != 0 else 0)
+45、	    y = ((A1 * C2 - A2 * C1) / (A2 * B1 - A1 * B2) if A1 * C2 - A2 * C1 != 0 else 0)
+46、	    return Point(x, y)
+47、	
+48、	
+49、	def suround_by_2edges_and_1circle(edge1, edge2, circle):
+50、	    point1 = point_with_2edges(edge1, edge2)
+51、	    point2 = circle.point
+52、	    r = (point2point(point1, circle.point) - circle.r) / (1 + math.sqrt(2))
+53、	    point = Point(point1.x + math.sqrt(2)*(point2.x - point1.x)/(circle.r + (1+math.sqrt(2))*r)*r,
+54、	                  point1.y + math.sqrt(2)*(point2.y - point1.y)/(circle.r + (1+math.sqrt(2))*r)*r)
+55、	    return Circle1(point, r)
+56、	
+57、	
+58、	def point2point(point1, point2):
+59、	    return math.sqrt(pow(point1.x - point2.x, 2) + pow(point1.y - point2.y, 2))
+60、	
+61、	
+62、	def point2edge(point, edge):
+63、	    return abs(edge.A * point.x + edge.B * point.y + edge.C) / math.sqrt(pow(edge.A, 2) + pow(edge.B, 2))
+64、	
+65、	
+66、	def surround_by_3circles(circle1, circle2, circle3):
+67、	    x1 = circle1.point.x
+68、	    y1 = circle1.point.y
+69、	    x2 = circle2.point.x
+70、	    y2 = circle2.point.y
+71、	    x3 = circle3.point.x
+72、	    y3 = circle3.point.y
+73、	    r1 = circle1.r
+74、	    r2 = circle2.r
+75、	    r3 = circle3.r
+76、	    k1 = ((r2 - r3) / (x2 - x3) - (r1 - r2) / (x1 - x2)) / ((y1 - y2) / (x1 - x2) - (y2 - y3) / (x2 - x3))
+77、	    b1 = ((p(x1) - p(x2) + p(y1) - p(y2) - p(r1) + p(r2))/(2*(x1-x2)) - (p(x2) - p(x3) + p(y2) - p(y3) - p(r2) + p(r3))/(2*(x2-x3)))/((y1 - y2) / (x1 - x2) - (y2 - y3) / (x2 - x3))
+78、	    k2 = (r3-r2)/(x2-x3) - k1*(y2-y3)/(x2 - x3)
+79、	    b2 = (p(x2) - p(x3) + p(y2) - p(y3) - p(r2) + p(r3))/(2*(x2-x3)) - b1*(y2-y3)/(x2-x3)
+80、	
+81、	    a = p(k2) + p(k1) - 1
+82、	    b = 2*k2*(b2-x1) + 2*k1*(b1-y1) - 2*r1
+83、	    c = p(b2-x1) + p(b1-y1) - p(r1)
+84、	
+85、	    r = -c/b
+86、	    x = k2*r + b2
+87、	    y = k1*r + b1
+88、	    return Circle1(Point(x, y), r)
+89、	
+90、	
+91、	def surround_by_2circles_and_1edge(circle1, circle2, edge2):
+92、	    A = edge2.A
+93、	    B = edge2.B
+94、	    C = edge2.C
+95、	    r1 = circle1.r
+96、	    r2 = circle2.r
+97、	    x1 = circle1.point.x
+98、	    y1 = circle1.point.y
+99、	    x2 = circle2.point.x
+100、	    y2 = circle2.point.y
+101、	    r = pow((math.sqrt(r1 * r2) / (math.sqrt(r1) + math.sqrt(r2))), 2)
+102、	    theta1 = (pow(r1, 2) - pow(r2, 2) + 2 * r * (r1 - r2) - pow(x1, 2) + pow(x2, 2) - pow(y1, 2) + pow(y2, 2)) / 2
+103、	    theta2 = r * math.sqrt(pow(A, 2) + pow(B, 2)) - C
+104、	    if C == 0 and (B == -1 or A == -1):
+105、	        theta2 = -theta2
+106、	    y = (theta2 * (x2 - x1) - theta1 * A) / (B * (x2 - x1) - A * (y2 - y1))
+107、	    x = (theta1 - y*(y2-y1))/(x2-x1)
+108、	    return Circle1(Point(x, y), r)
+109、	
+110、	
+111、	class suroundings(object):
+112、	    def __init__(self, type, edges, circles):
+113、	        self.type = type
+114、	        self.edges = edges
+115、	        self.circles = circles
+116、	        self.circle = self.new_circle()
+117、	
+118、	    def new_circle(self):
+119、	        if self.type == 1:
+120、	            return suround_by_2edges_and_1circle(self.edges[0], self.edges[1], self.circles[0])
+121、	        elif self.type == 2:
+122、	            return surround_by_2circles_and_1edge(self.circles[0], self.circles[1], self.edges[0])
+123、	        else:
+124、	            return surround_by_3circles(self.circles[0], self.circles[1], self.circles[2])
+125、	
+126、	    def new_surroundings(self):
+127、	        if self.type == 1:
+128、	            return [suroundings(1, [self.edges[0], self.edges[1]], [self.circle]),
+129、	                    suroundings(2, [self.edges[0]], [self.circles[0], self.circle]),
+130、	                    suroundings(2, [self.edges[1]], [self.circles[0], self.circle])]
+131、	        elif self.type == 2:
+132、	            return [suroundings(2, [self.edges[0]], [self.circles[0], self.circle]),
+133、	                    suroundings(2, [self.edges[0]], [self.circles[1], self.circle]),
+134、	                    suroundings(3, [], [self.circles[0], self.circles[1], self.circle])]
+135、	        else:
+136、	            return [suroundings(3, [], [self.circle, self.circles[1], self.circles[2]]),
+137、	                    suroundings(3, [], [self.circles[0], self.circle, self.circles[2]]),
+138、	                    suroundings(3, [], [self.circles[0], self.circles[1], self.circle])]
+139、	
+140、	
+141、	def main(N):
+142、	    queue = []
+143、	    result = list()
+144、	    circle0 = Circle1(Point(0.5, 0.5), 0.5)
+145、	    edge1 = Edge(Point(0, 0), Point(1, 0))
+146、	    edge2 = Edge(Point(0, 0), Point(0, 1))
+147、	    edge3 = Edge(Point(0, 1), Point(1, 1))
+148、	    edge4 = Edge(Point(1, 1), Point(1, 0))
+149、	    result.append(circle0)
+150、	    queue.append(suroundings(1, [edge1, edge2], [circle0]))
+151、	    queue.append(suroundings(1, [edge2, edge3], [circle0]))
+152、	    queue.append(suroundings(1, [edge3, edge4], [circle0]))
+153、	    queue.append(suroundings(1, [edge4, edge1], [circle0]))
+154、	    while len(queue) > 0 and N >= 0:
+155、	        surrounding = queue.pop(0)
+156、	        newCircle = surrounding.circle
+157、	        for surround in surrounding.new_surroundings():
+158、	            for i in range(0, len(queue)):
+159、	                if surround.circle.r >= queue[i].circle.r:
+160、	                    queue.insert(i, surround)
+161、	                    break
+162、	                if i == len(queue) - 1:
+163、	                    queue.append(surround)
+164、	
+165、	        result.append(newCircle)
+166、	        N -= 1
+167、	    return result
+168、	
+169、	
+170、	def plot(result):
+171、	    turtle.penup()
+172、	    turtle.goto(0, 300)
+173、	    turtle.pendown()
+174、	    turtle.forward(300)
+175、	    turtle.right(90)
+176、	    turtle.forward(300)https://github.com/lizekang/SoftwareEngineer/blob/master/project1/1.png
+177、	    turtle.right(90)
+178、	    turtle.forward(300)
+179、	    turtle.right(90)
+180、	    turtle.forward(300)
+181、	    turtle.right(90)
+182、	    turtle.penup()
+183、	    for item in result:
+184、	        turtle.penup()
+185、	        turtle.goto(item.point.x*300, (item.point.y-item.r)*300)
+186、	        turtle.pendown()
+187、	        turtle.circle(item.r*300)
+188、	    turtle.exitonclick()
+189、	
+190、	result = main(100)
+191、	plot(result)
+6、测试结果
+ 
+M=4
+ 
+M=12
+ 
+M=36
+ 
+M=100
+7、存储代码
+$ git add .
+$ git commit -m "fix a bug"
+$ git push origin master
+
+
